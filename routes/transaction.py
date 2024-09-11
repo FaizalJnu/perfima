@@ -1,0 +1,52 @@
+from routes.category import get_current_user
+from controllers.transaction_controller import TransactionController
+from schemas import TransactionResponse
+from schemas import UserInDB
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from database import get_db
+from schemas import TransactionCreate, TransactionsUpdate
+from typing import List
+
+
+router = APIRouter(prefix="/transactions")
+
+@router.post("/", response_model=TransactionResponse)
+def create_transaction(
+    transaction: TransactionCreate,
+    current_user: UserInDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return TransactionController.create_transaction(transaction, current_user, db)
+
+@router.get("/", response_model=List[TransactionResponse])
+def read_transactions(
+    current_user: UserInDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return TransactionController.get_user_transactions(current_user, db)
+
+@router.get("/{transaction_id}", response_model=TransactionResponse)
+def read_transaction(
+    transaction_id: int,
+    current_user: UserInDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return TransactionController.get_transaction(transaction_id, current_user, db)
+
+@router.put("/{transaction_id}", response_model=TransactionResponse)
+def update_transaction(
+    transaction_id: int,
+    transaction: TransactionsUpdate,
+    current_user: UserInDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return TransactionController.update_transaction(transaction_id, transaction, current_user, db)
+
+@router.delete("/{transaction_id}", response_model=TransactionResponse)
+def delete_transaction(
+    transaction_id: int,
+    current_user: UserInDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return TransactionController.delete_transaction(transaction_id, current_user, db)
