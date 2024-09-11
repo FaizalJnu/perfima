@@ -1,6 +1,6 @@
 from perfima.routes.category import get_current_user
 from perfima.controllers.transaction_controller import TransactionController
-from perfima.schemas import TransactionResponse, UserInDB, TransactionCreate, TransactionsUpdate
+from perfima.schemas import TransactionResponse, UserInDB, TransactionCreate, TransactionUpdate
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from perfima.database import get_db
@@ -35,7 +35,7 @@ def read_transaction(
 @router.put("/{transaction_id}", response_model=TransactionResponse)
 def update_transaction(
     transaction_id: int,
-    transaction: TransactionsUpdate,
+    transaction: TransactionUpdate,
     current_user: UserInDB = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):

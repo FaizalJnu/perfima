@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from typing import List, Optional
 
-from perfima.schemas import TransactionCreate, TransactionUpdate, TransactionResponse
+from perfima.schemas import TransactionCreate, TransactionUpdate, TransactionResponse, TransactionType
 from perfima.models import Transaction
 from perfima.services import category_service
 
@@ -68,9 +68,10 @@ class TransactionService:
     def to_response(transaction: Transaction) -> TransactionResponse:
         return TransactionResponse(
             id=transaction.id,
+            user_id=transaction.user_id,
             category=transaction.category.name,
             amount=transaction.amount,
             date=transaction.date,
             description=transaction.description,
-            transaction_type=transaction.transaction_type
+            transaction_type=TransactionType(transaction.transaction_type)
         )

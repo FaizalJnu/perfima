@@ -40,29 +40,24 @@ class TransactionBase(BaseModel):
 class TransactionCreate(TransactionBase):
     pass
 
-class TransactionsUpdate(BaseModel):
+class TransactionUpdate(BaseModel):
     amount: Optional[float] = None
     date: Optional[date_type] = None
     description: Optional[str] = None
     transaction_type: Optional[TransactionType] = None
     category: Optional[str] = None
 
-class TransactionResponse(TransactionBase):
+class TransactionResponse(BaseModel):
     id: int
     user_id: int
+    amount: float
+    date: date_type
+    description: str
+    transaction_type: TransactionType
+    category: str
 
     class Config:
         orm_mode = True
-
-
-class TransactionCreate(TransactionBase):
-    # Derive all from transaction base, userid will be taken separately
-    pass
-
-
-class TransactionUpdate(TransactionBase):
-    # Derive all from transaction base, userid will be taken separately
-    pass
 
 
 class Transaction(TransactionBase):
