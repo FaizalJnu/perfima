@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
-from schemas import CategoryCreate, CategoryUpdate
-from models import Category
+from perfima.schemas import CategoryCreate, CategoryUpdate
+from perfima.models import Category
 
 def get_category_by_id(db: Session, category_id: int, user_id: int):
     return db.query(Category).filter(Category.id == category_id, Category.user_id == user_id).first()

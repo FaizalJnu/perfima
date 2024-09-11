@@ -1,9 +1,9 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from database import get_db
-from services import auth_service, user_service
-from schemas import UserCreate
+from perfima.database import get_db
+from perfima.services import auth_service, user_service
+from perfima.schemas import UserCreate
 from datetime import timedelta
 import logging
 

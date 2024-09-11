@@ -2,17 +2,17 @@ from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
 from typing import List
 
-from schemas import (
+from perfima.schemas import (
     TransactionCreate,
     TransactionUpdate,
     TransactionResponse,
     UserInDB,
     TransactionType
 )
-from services import category_service, savings_goal_service
-from services.transaction_service import TransactionService
-from database import get_db
-from routes.transaction import get_current_user
+from perfima.services import category_service, savings_goal_service
+from perfima.services.transaction_service import TransactionService
+from perfima.database import get_db
+from perfima.routes.transaction import get_current_user
 
 class TransactionController:
     @staticmethod

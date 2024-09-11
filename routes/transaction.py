@@ -1,11 +1,9 @@
-from routes.category import get_current_user
-from controllers.transaction_controller import TransactionController
-from schemas import TransactionResponse
-from schemas import UserInDB
+from perfima.routes.category import get_current_user
+from perfima.controllers.transaction_controller import TransactionController
+from perfima.schemas import TransactionResponse, UserInDB, TransactionCreate, TransactionsUpdate
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from database import get_db
-from schemas import TransactionCreate, TransactionsUpdate
+from perfima.database import get_db
 from typing import List
 
 

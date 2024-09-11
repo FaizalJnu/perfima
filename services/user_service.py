@@ -1,6 +1,6 @@
-from models import User
-from schemas import UserCreate
-from services.auth_service import get_password_hash
+from perfima.models import User
+from perfima.schemas import UserCreate
+from perfima.services.auth_service import get_password_hash
 from sqlalchemy.orm import Session
 
 def create_user(db: Session, user: UserCreate):

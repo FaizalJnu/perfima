@@ -1,9 +1,9 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from database import get_db
-from services import user_service, auth_service
-from schemas import UserInDB
+from perfima.database import get_db
+from perfima.services import user_service, auth_service
+from perfima.schemas import UserInDB
 from jose import jwt, JWTError
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")

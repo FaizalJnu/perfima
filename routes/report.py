@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from database import get_db
-from controllers import user_controller, report_controller, user_controller
-from schemas import UserInDB
+from perfima.database import get_db
+from perfima.controllers import user_controller, report_controller, user_controller
+from perfima.schemas import UserInDB
 from typing import List
 
 router = APIRouter(prefix="/reports")

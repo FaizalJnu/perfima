@@ -1,4 +1,8 @@
-from . import logging, HTTPException, category_service, transaction_service, CategoryCreate, UserInDB, CategoryUpdate, Session
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+from perfima.services import category_service, transaction_service
+from perfima.schemas import CategoryCreate, UserInDB, CategoryUpdate
+import logging
 logger = logging.getLogger(__name__)
 
 # function to fetch a category and check ownership

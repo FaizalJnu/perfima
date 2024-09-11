@@ -2,9 +2,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from typing import List, Optional
 
-from schemas import TransactionCreate, TransactionUpdate, TransactionResponse
-from models import Transaction
-from services import category_service
+from perfima.schemas import TransactionCreate, TransactionUpdate, TransactionResponse
+from perfima.models import Transaction
+from perfima.services import category_service
 
 class TransactionService:
     @staticmethod

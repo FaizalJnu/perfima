@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from jose import jwt
 from passlib.context import CryptContext
-from models import User
+from perfima.models import User
 import logging
 import os
 logger = logging.getLogger(__name__)

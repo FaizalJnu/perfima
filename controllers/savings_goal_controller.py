@@ -1,9 +1,9 @@
 from fastapi import HTTPException, Depends
 from sqlalchemy.orm import Session
-from database import get_db
-from schemas import SavingsGoalCreate, UserInDB, SavingsGoalUpdate
-from services import category_service, savings_goal_service
-from exceptions import CategoryNotFoundException, SavingGoalAlreadyExistsException, SavingGoalNotFoundException, UnauthorizedAccessException
+from perfima.database import get_db
+from perfima.schemas import SavingsGoalCreate, UserInDB, SavingsGoalUpdate
+from perfima.services import category_service, savings_goal_service
+from perfima.exceptions import CategoryNotFoundException, SavingGoalAlreadyExistsException, SavingGoalNotFoundException, UnauthorizedAccessException
 
 def create_saving_goal(saving_goal: SavingsGoalCreate, current_user: UserInDB, db: Session = Depends(get_db)):
     try:

@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from controllers.user_controller import get_current_user
-from schemas import UserInDB
-from database import get_db
+from perfima.controllers.user_controller import get_current_user
+from perfima.schemas import UserInDB
+from perfima.database import get_db
 
 router = APIRouter(prefix="/users")
 

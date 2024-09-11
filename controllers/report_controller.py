@@ -1,7 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from schemas import UserInDB
-from services import report_service
+from perfima.schemas import UserInDB
+from perfima.services import report_service
 
 
 def get_monthly_report(year: int, month: int, current_user: UserInDB, db: Session):

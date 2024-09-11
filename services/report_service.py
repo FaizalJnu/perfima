@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta
 from calendar import monthrange
 from sqlalchemy import func
-from models import Transaction, Category, SavingsGoal
+from perfima.models import Transaction, Category, SavingsGoal
 import matplotlib.pyplot as plt
 import io
 import base64

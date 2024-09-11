@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
-from schemas import SavingsGoalCreate, SavingsGoalUpdate
-from models import SavingsGoal
-from services import category_service
-from exceptions import SavingGoalNotFoundException, SavingGoalAlreadyExistsException, CategoryNotFoundException
+from perfima.schemas import SavingsGoalCreate, SavingsGoalUpdate
+from perfima.models import SavingsGoal
+from perfima.services import category_service
+from perfima.exceptions import SavingGoalNotFoundException, SavingGoalAlreadyExistsException, CategoryNotFoundException
 
 def create_saving_goal(db: Session, saving_goal: SavingsGoalCreate, user_id: int, category_id: int):
     if saving_goal_exists_for_user(db, saving_goal.name, user_id):

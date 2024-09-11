@@ -1,5 +1,5 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Enum, Date
-from database import Base
+from perfima.database import Base
 from sqlalchemy.orm import relationship
 import enum
 from datetime import date

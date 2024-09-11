@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, status, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
-from database import get_db
-from controllers import user_controller, category_controller, user_controller, savings_goal_controller
-from schemas import UserInDB, SavingsGoalCreate, SavingsGoal, SavingsGoalUpdate
+from perfima.database import get_db
+from perfima.controllers import user_controller, category_controller, user_controller, savings_goal_controller
+from perfima.schemas import UserInDB, SavingsGoalCreate, SavingsGoal, SavingsGoalUpdate
 from typing import List
 
 router = APIRouter(prefix="/savings_goal")
