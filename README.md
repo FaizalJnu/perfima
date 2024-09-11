@@ -83,6 +83,12 @@ This project is a backend service built with **Python** using **FastAPI** for th
 
 6. Access the FastAPI Swagger documentation at `http://127.0.0.1:8000/docs`.
 
+7. Run tests:
+
+   ```bash
+   PYTHONPATH=./ pytest perfima/tests/
+   ```
+
 ---
 
 ## API Endpoints
