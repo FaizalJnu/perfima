@@ -9,7 +9,7 @@ from perfima.services import category_service
 class TransactionService:
     @staticmethod
     def create_transaction(db: Session, transaction: TransactionCreate, user_id: int) -> Transaction:
-        category = category_service.get_category(db, transaction.category, user_id)
+        category = category_service.get_category_id(db, transaction.category, user_id)
         db_transaction = Transaction(
             category_id=category.id,
             user_id=user_id,
@@ -31,7 +31,11 @@ class TransactionService:
 
     @staticmethod
     def get_user_transactions(db: Session, user_id: int) -> List[Transaction]:
-        query = select(Transaction).where(Transaction.user_id == user_id)
+        query = (
+            select(Transaction)
+            .where(Transaction.user_id == user_id)
+            .order_by(Transaction.date.desc(), Transaction.id.desc())
+        )
         result = db.execute(query)
         return result.scalars().all()
 
@@ -41,7 +45,7 @@ class TransactionService:
         if db_transaction and db_transaction.user_id == user_id:
             update_data = transaction.dict(exclude_unset=True)
             if 'category' in update_data:
-                category = category_service.get_category(db, update_data['category'], user_id)
+                category = category_service.get_category_id(db, update_data['category'], user_id)
                 update_data['category_id'] = category.id
                 del update_data['category']
             for key, value in update_data.items():

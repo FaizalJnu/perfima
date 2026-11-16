@@ -1,8 +1,12 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Enum, Date
+from sqlalchemy import Column, Integer, String, Numeric, ForeignKey, Enum, Date
 from perfima.database import Base
 from sqlalchemy.orm import relationship
 import enum
 from datetime import date
+from decimal import Decimal
+
+# Money is stored as fixed point with 2 decimal places, never as a binary float
+MONEY = Numeric(12, 2)
 
 
 class Category(Base):
@@ -39,7 +43,7 @@ class Transaction(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     category_id = Column(Integer, ForeignKey("categories.id"))
-    amount = Column(Float)
+    amount = Column(MONEY)
     description = Column(String)
     transaction_type = Column(Enum(TransactionType))
     date = Column(Date, default=date.today)
@@ -53,8 +57,8 @@ class SavingsGoal(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
     name = Column(String)
-    target = Column(Float)
-    progress = Column(Float, default=0.0)
+    target = Column(MONEY)
+    progress = Column(MONEY, default=Decimal("0.00"))
     category_id = Column(Integer, ForeignKey("categories.id"))
 
     user = relationship("User", back_populates="savings_goals")

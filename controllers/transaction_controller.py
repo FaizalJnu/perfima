@@ -21,7 +21,7 @@ class TransactionController:
         current_user: UserInDB = Depends(get_current_user),
         db: Session = Depends(get_db)
     ) -> TransactionResponse:
-        category = category_service.get_category(db, transaction.category, current_user.id)
+        category = category_service.get_category_id(db, transaction.category, current_user.id)
         if not category:
             raise HTTPException(status_code=400, detail="Category not found")
 
@@ -30,7 +30,7 @@ class TransactionController:
         if transaction.transaction_type == TransactionType.credit:
             savings_goal_service.update_savings_goal_progress(db, current_user.id, category.id, transaction.amount)
 
-        return TransactionResponse.from_orm(new_transaction)
+        return TransactionService.to_response(new_transaction)
 
     @staticmethod
     def get_transaction(
@@ -41,7 +41,7 @@ class TransactionController:
         transaction = TransactionService.get_transaction(db, transaction_id)
         if not transaction or transaction.user_id != current_user.id:
             raise HTTPException(status_code=404, detail="Transaction not found")
-        return TransactionResponse.from_orm(transaction)
+        return TransactionService.to_response(transaction)
 
     @staticmethod
     def get_user_transactions(
@@ -49,7 +49,7 @@ class TransactionController:
         db: Session = Depends(get_db)
     ) -> List[TransactionResponse]:
         transactions = TransactionService.get_user_transactions(db, current_user.id)
-        return [TransactionResponse.from_orm(t) for t in transactions]
+        return [TransactionService.to_response(t) for t in transactions]
 
     @staticmethod
     def update_transaction(
@@ -63,20 +63,22 @@ class TransactionController:
             raise HTTPException(status_code=404, detail="Transaction not found")
         
         if transaction_update.category:
-            category = category_service.get_category(db, transaction_update.category, current_user.id)
+            category = category_service.get_category_id(db, transaction_update.category, current_user.id)
             if not category:
                 raise HTTPException(status_code=400, detail="Category not found")
 
-        updated_transaction = TransactionService.update_transaction(db, transaction_id, transaction_update)
-        return TransactionResponse.from_orm(updated_transaction)
+        updated_transaction = TransactionService.update_transaction(db, transaction_id, transaction_update, current_user.id)
+        return TransactionService.to_response(updated_transaction)
 
     @staticmethod
     def delete_transaction(
         transaction_id: int,
         current_user: UserInDB = Depends(get_current_user),
         db: Session = Depends(get_db)
-    ) -> None:
+    ) -> TransactionResponse:
         transaction = TransactionService.get_transaction(db, transaction_id)
         if not transaction or transaction.user_id != current_user.id:
             raise HTTPException(status_code=404, detail="Transaction not found")
+        response = TransactionService.to_response(transaction)
         TransactionService.delete_transaction(db, transaction_id)
+        return response

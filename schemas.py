@@ -1,7 +1,13 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from enum import Enum
 from datetime import date as date_type
-from typing import Optional
+from decimal import Decimal
+from typing import Annotated, Optional
+
+
+# Amounts are exact decimals with at most 2 decimal places, serialized as strings in JSON (e.g. "12.50")
+Money = Annotated[Decimal, Field(max_digits=12, decimal_places=2)]
+PositiveMoney = Annotated[Decimal, Field(max_digits=12, decimal_places=2, gt=0)]
 
 
 class UserCreate(BaseModel):
@@ -22,16 +28,14 @@ class UserInDB(BaseModel):
     email: EmailStr
     name: str
 
-    class Config:
-        orm_mode = True
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TransactionType(str, Enum):
     credit = "credit"
     debit = "debit"
 
 class TransactionBase(BaseModel):
-    amount: float
+    amount: PositiveMoney
     date: date_type
     description: str
     transaction_type: TransactionType
@@ -41,7 +45,7 @@ class TransactionCreate(TransactionBase):
     pass
 
 class TransactionUpdate(BaseModel):
-    amount: Optional[float] = None
+    amount: Optional[PositiveMoney] = None
     date: Optional[date_type] = None
     description: Optional[str] = None
     transaction_type: Optional[TransactionType] = None
@@ -50,22 +54,20 @@ class TransactionUpdate(BaseModel):
 class TransactionResponse(BaseModel):
     id: int
     user_id: int
-    amount: float
+    amount: Decimal
     date: date_type
     description: str
     transaction_type: TransactionType
     category: str
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Transaction(TransactionBase):
     id: int
     user_id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class CategoryBase(BaseModel):
@@ -84,13 +86,12 @@ class Category(CategoryBase):
     id: int
     user_id: int
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class SavingsGoalBase(BaseModel):
     name: str
-    target: float
+    target: PositiveMoney
     category: str
 
 
@@ -105,7 +106,6 @@ class SavingsGoalUpdate(SavingsGoalBase):
 class SavingsGoal(SavingsGoalBase):
     id: int
     user_id: int
-    progress: float
+    progress: Decimal
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)

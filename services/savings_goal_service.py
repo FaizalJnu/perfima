@@ -1,3 +1,4 @@
+from decimal import Decimal
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from perfima.schemas import SavingsGoalCreate, SavingsGoalUpdate
@@ -13,7 +14,7 @@ def create_saving_goal(db: Session, saving_goal: SavingsGoalCreate, user_id: int
         name=saving_goal.name, 
         target=saving_goal.target, 
         user_id=user_id, 
-        progress=0.0,
+        progress=Decimal("0.00"),
         category_id=category_id
     )
     db.add(db_saving_goal)
@@ -52,7 +53,7 @@ def delete_saving_goal(db: Session, saving_goal_id: int, user_id: int):
     db.commit()
     return db_saving_goal
 
-def update_savings_goal_progress(db: Session, user_id: int, category_id: int, amount: float):
+def update_savings_goal_progress(db: Session, user_id: int, category_id: int, amount: Decimal):
     result = db.execute(select(SavingsGoal).filter(
         SavingsGoal.user_id == user_id,
         SavingsGoal.category_id == category_id

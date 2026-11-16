@@ -7,9 +7,12 @@ import os
 logger = logging.getLogger(__name__)
 
 
-SECRET_KEY = "faiz"
+SECRET_KEY = os.getenv("SECRET_KEY", "faiz")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 300
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "300"))
+
+if "SECRET_KEY" not in os.environ:
+    logger.warning("SECRET_KEY is not set, using the development default")
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

@@ -1,13 +1,12 @@
-from fastapi import FastAPI, HTTPException, Depends, status
-from pydantic import BaseModel
-from typing import Annotated
+from fastapi import FastAPI
 import perfima.models
 from perfima.routes import auth, user, transaction, category, savings_goal, report
-from perfima.database import engine, localSession
-from sqlalchemy.orm import session
+from perfima.database import engine
+from perfima.telemetry import setup_tracing
 
 app = FastAPI()
 perfima.models.Base.metadata.create_all(bind=engine)
+setup_tracing(app, engine)
 
 @app.get("/")
 def read_root():
@@ -23,4 +22,3 @@ app.include_router(transaction.router)
 app.include_router(category.router)
 app.include_router(savings_goal.router)
 app.include_router(report.router)
-

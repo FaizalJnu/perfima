@@ -22,7 +22,7 @@ def mock_transaction():
 
 
 def test_create_transaction(mock_db, mock_category):
-    with patch('perfima.services.category_service.get_category', return_value=mock_category):
+    with patch('perfima.services.category_service.get_category_id', return_value=mock_category):
         transaction_create = TransactionCreate(
             category="Test Category",
             amount=100.0,
@@ -56,7 +56,7 @@ def test_get_user_transactions(mock_db, mock_transaction):
 def test_update_transaction(mock_db, mock_transaction, mock_category):
     mock_db.execute.return_value.scalars.return_value.first.return_value = mock_transaction
     
-    with patch('perfima.services.category_service.get_category', return_value=mock_category):
+    with patch('perfima.services.category_service.get_category_id', return_value=mock_category):
         transaction_update = TransactionUpdate(
             category="Updated Category",
             amount=200.0,

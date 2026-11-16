@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
-from perfima.services import category_service, transaction_service
+from perfima.services import category_service
+from perfima.services.transaction_service import TransactionService
 from perfima.schemas import CategoryCreate, UserInDB, CategoryUpdate
 import logging
 logger = logging.getLogger(__name__)
@@ -43,17 +44,18 @@ def get_user_categories(current_user: UserInDB, db: Session):
 
 def update_category(category_id: int, category: CategoryUpdate, current_user: UserInDB, db: Session):
     db_category = get_category_or_raise(db, category_id, current_user)
-    updated_category = category_service.update_category(db, category_id, category)
+    updated_category = category_service.update_category(db, category_id, category, current_user.id)
     logger.info(f"Category updated: {updated_category.name} (ID: {category_id}) for user {current_user.id}")
     return updated_category
 
 
 def delete_category(category_id: int, current_user: UserInDB, db: Session):
-    if transaction_service.get_transactions_by_category(db, current_user.id, category_id):
+    db_category = get_category_or_raise(db, category_id, current_user)
+
+    if TransactionService.get_transactions_by_category(db, current_user.id, category_id):
         logger.error(f"Category deletion failed: {category_id} has associated transactions for user {current_user.id}")
         raise HTTPException(status_code=400, detail="Cannot delete category with transactions")
-    
-    db_category = get_category_or_raise(db, category_id, current_user)
-    deleted_category = category_service.delete_category(db, category_id)
+
+    deleted_category = category_service.delete_category(db, category_id, current_user.id)
     logger.info(f"Category deleted: {db_category.name} (ID: {category_id}) for user {current_user.id}")
     return deleted_category
