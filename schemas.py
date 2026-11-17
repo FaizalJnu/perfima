@@ -2,12 +2,13 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from enum import Enum
 from datetime import date as date_type
 from decimal import Decimal
-from typing import Annotated, Optional
+from typing import Annotated, List, Optional
 
 
 # Amounts are exact decimals with at most 2 decimal places, serialized as strings in JSON (e.g. "12.50")
 Money = Annotated[Decimal, Field(max_digits=12, decimal_places=2)]
 PositiveMoney = Annotated[Decimal, Field(max_digits=12, decimal_places=2, gt=0)]
+Budget = Annotated[Decimal, Field(max_digits=12, decimal_places=2, ge=0)]
 
 
 class UserCreate(BaseModel):
@@ -72,14 +73,17 @@ class Transaction(TransactionBase):
 
 class CategoryBase(BaseModel):
     name: str
+    monthly_budget: Optional[Budget] = None
 
 
 class CategoryCreate(CategoryBase):
     pass
 
 
-class CategoryUpdate(CategoryBase):
-    pass
+# Every field is optional so a budget can be changed without resending the name
+class CategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    monthly_budget: Optional[Budget] = None
 
 
 class Category(CategoryBase):
@@ -109,3 +113,16 @@ class SavingsGoal(SavingsGoalBase):
     progress: Decimal
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class CategorySpending(BaseModel):
+    name: str
+    spent: Decimal
+    budget: Optional[Decimal] = None
+
+
+class MonthlyTrend(BaseModel):
+    month: str
+    income: Decimal
+    expenses: Decimal
+    categories: List[CategorySpending]

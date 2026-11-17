@@ -2,8 +2,8 @@ from sqlalchemy.orm import Session
 from datetime import date, datetime, timedelta
 from calendar import monthrange
 from decimal import Decimal
-from sqlalchemy import func
-from perfima.models import Transaction, Category, SavingsGoal
+from sqlalchemy import func, extract
+from perfima.models import Transaction, Category, SavingsGoal, TransactionType
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -52,6 +52,63 @@ def get_yearly_category_report(db: Session, user_id: int, year: int = None):
     start_date, end_date = get_year_date_range(year)
     logger.info(f"Generating yearly category report for user {user_id} from {start_date} to {end_date}")
     return get_category_report(db, user_id, start_date, end_date)
+
+
+def shift_month(year: int, month: int, delta: int):
+    index = year * 12 + (month - 1) + delta
+    return index // 12, index % 12 + 1
+
+
+# Income, expenses and spending per category for each of the last `months` months, oldest first.
+# Months without transactions are still returned so charts get a continuous axis.
+def get_monthly_trend(db: Session, user_id: int, months: int = 12, today: date = None):
+    today = today or date.today()
+    start_year, start_month = shift_month(today.year, today.month, -(months - 1))
+    start_date = date(start_year, start_month, 1)
+    end_date = date(today.year, today.month, monthrange(today.year, today.month)[1])
+
+    year = extract("year", Transaction.date)
+    month = extract("month", Transaction.date)
+    rows = db.query(
+        year, month, Transaction.category_id, Transaction.transaction_type, func.sum(Transaction.amount)
+    ).filter(
+        Transaction.user_id == user_id,
+        Transaction.date.between(start_date, end_date)
+    ).group_by(year, month, Transaction.category_id, Transaction.transaction_type).all()
+
+    categories = {c.id: c for c in db.query(Category).filter(Category.user_id == user_id).all()}
+    budgeted_ids = {c.id for c in categories.values() if c.monthly_budget is not None}
+
+    trend = {}
+    for offset in range(months):
+        y, m = shift_month(start_year, start_month, offset)
+        trend[(y, m)] = {"month": f"{y:04d}-{m:02d}", "income": Decimal("0.00"), "expenses": Decimal("0.00"), "spent": {}}
+
+    # postgres returns EXTRACT as a numeric, sqlite as an integer
+    for row_year, row_month, category_id, transaction_type, total in rows:
+        entry = trend[(int(row_year), int(row_month))]
+        total = total or Decimal("0.00")
+        if transaction_type == TransactionType.credit:
+            entry["income"] += total
+        else:
+            entry["expenses"] += total
+            entry["spent"][category_id] = entry["spent"].get(category_id, Decimal("0.00")) + total
+
+    # categories with a budget are listed even in months nothing was spent on them
+    result = []
+    for entry in trend.values():
+        spent = entry.pop("spent")
+        entry["categories"] = sorted(
+            (
+                {"name": categories[i].name, "spent": spent.get(i, Decimal("0.00")), "budget": categories[i].monthly_budget}
+                for i in (set(spent) | budgeted_ids) if i in categories
+            ),
+            key=lambda c: (-c["spent"], c["name"])
+        )
+        result.append(entry)
+
+    logger.info(f"Monthly trend for user {user_id} from {start_date} to {end_date}: {len(rows)} groups")
+    return result
 
 
 def get_report(db: Session, user_id: int, start_date: date, end_date: date):

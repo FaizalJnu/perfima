@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="application-name" content="Perfima">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self'">
+  <title>Perfima</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <span class="brand">Perfima</span>
+    <nav class="tabs" role="tablist" id="tabs" hidden>
+      <button type="button" role="tab" id="tab-btn-add" data-tab="add" aria-controls="tab-add">Add</button>
+      <button type="button" role="tab" id="tab-btn-history" data-tab="history" aria-controls="tab-history">History</button>
+      <button type="button" role="tab" id="tab-btn-insights" data-tab="insights" aria-controls="tab-insights">Insights</button>
+    </nav>
+    <div class="topbar-actions">
+      <button type="button" id="logout" class="ghost" hidden>Log out</button>
+      <button type="button" id="quit" class="ghost" hidden>Quit</button>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" role="status" hidden></div>
+
+  <main>
+    <section id="boot" class="screen">
+      <p id="boot-message" class="muted">Starting…</p>
+    </section>
+
+    <section id="login" class="screen" hidden>
+      <form id="login-form" class="card login-card">
+        <h1>Log in</h1>
+        <label class="field">
+          <span>Username</span>
+          <input name="username" autocomplete="username" required>
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input name="password" type="password" autocomplete="current-password" required>
+        </label>
+        <p id="login-error" class="form-error" role="alert"></p>
+        <button type="submit" class="primary">Log in</button>
+      </form>
+    </section>
+
+    <section id="stopped" class="screen" hidden>
+      <div class="card center">
+        <h1>Perfima has stopped</h1>
+        <p class="muted">Your entries are saved. You can close this tab.</p>
+      </div>
+    </section>
+
+    <div id="app" hidden>
+      <section id="tab-add" class="tab" role="tabpanel" aria-labelledby="tab-btn-add" hidden>
+        <form id="add-form" class="card entry-form" autocomplete="off" novalidate>
+          <div class="type-toggle" role="radiogroup" aria-label="Type">
+            <label><input type="radio" name="type" value="debit" checked><span>Expense</span></label>
+            <label><input type="radio" name="type" value="credit"><span>Income</span></label>
+          </div>
+          <div class="form-grid">
+            <label class="field">
+              <span>Amount</span>
+              <input name="amount" id="add-amount" inputmode="decimal" placeholder="0.00" required>
+            </label>
+            <label class="field">
+              <span>Category</span>
+              <select name="category" id="add-category" required></select>
+            </label>
+            <label class="field wide">
+              <span>Description</span>
+              <input name="description" placeholder="What was it for?">
+            </label>
+            <label class="field">
+              <span>Date</span>
+              <input name="date" id="add-date" type="date" required>
+            </label>
+          </div>
+          <div id="new-category" class="new-category" hidden>
+            <input id="new-category-name" placeholder="New category name" aria-label="New category name">
+            <button type="button" id="new-category-save" class="small primary">Create</button>
+            <button type="button" id="new-category-cancel" class="small ghost">Cancel</button>
+          </div>
+          <div class="form-footer">
+            <p id="add-error" class="form-error" role="alert"></p>
+            <p id="add-status" class="form-status" aria-live="polite"></p>
+            <button type="submit" class="primary">Add entry</button>
+          </div>
+        </form>
+
+        <section class="card">
+          <div class="card-head">
+            <h2>Recent entries</h2>
+            <span id="today-total" class="muted"></span>
+          </div>
+          <p class="muted small-print">Dated today, or added since you opened Perfima.</p>
+          <ul id="recent-list" class="entry-list"></ul>
+        </section>
+      </section>
+
+      <section id="tab-history" class="tab" role="tabpanel" aria-labelledby="tab-btn-history" hidden>
+        <div class="card filters">
+          <label class="field">
+            <span>Month</span>
+            <select id="history-month"></select>
+          </label>
+          <label class="field">
+            <span>Category</span>
+            <select id="history-category"></select>
+          </label>
+          <div id="history-totals" class="totals"></div>
+          <button type="button" id="export-csv" class="ghost">Export CSV</button>
+        </div>
+        <section class="card">
+          <ul id="history-list" class="entry-list"></ul>
+        </section>
+      </section>
+
+      <section id="tab-insights" class="tab" role="tabpanel" aria-labelledby="tab-btn-insights" hidden>
+        <section class="card">
+          <div class="card-head">
+            <h2>Last 12 months</h2>
+            <div class="legend">
+              <span class="key key-expense">Expenses</span>
+              <span class="key key-income">Income</span>
+              <span class="key key-budget" id="legend-budget" hidden>Monthly budget</span>
+            </div>
+          </div>
+          <p class="muted small-print">Pick a month to see where the money went.</p>
+          <div id="trend-chart" class="chart"></div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2 id="detail-title"></h2>
+          </div>
+          <div id="detail-stats" class="stats"></div>
+          <div class="breakdown-head" aria-hidden="true">
+            <span>Category</span><span>Spent</span><span>Budget</span><span title="Compared with the average of the 3 months before">vs 3-mo avg</span>
+          </div>
+          <ul id="breakdown" class="breakdown"></ul>
+          <details id="breakdown-idle" class="breakdown-idle" hidden>
+            <summary></summary>
+            <ul id="breakdown-idle-list" class="breakdown"></ul>
+          </details>
+        </section>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

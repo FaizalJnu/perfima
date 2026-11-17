@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from typing import List, Optional
+import csv
+import io
 
 from perfima.schemas import TransactionCreate, TransactionUpdate, TransactionResponse, TransactionType
 from perfima.models import Transaction
@@ -79,3 +81,18 @@ class TransactionService:
             description=transaction.description,
             transaction_type=TransactionType(transaction.transaction_type)
         )
+
+    @staticmethod
+    def to_csv(transactions: List[Transaction]) -> str:
+        buffer = io.StringIO()
+        writer = csv.writer(buffer)
+        writer.writerow(["date", "description", "category", "type", "amount"])
+        for transaction in transactions:
+            writer.writerow([
+                transaction.date.isoformat(),
+                transaction.description,
+                transaction.category.name,
+                TransactionType(transaction.transaction_type).value,
+                transaction.amount
+            ])
+        return buffer.getvalue()

@@ -26,3 +26,7 @@ def get_yearly_category_report(year: int, current_user: UserInDB, db: Session):
     if year < 1947 or year > 2038:
         raise HTTPException(status_code=400, detail="Invalid year")
     return report_service.get_yearly_category_report(db, current_user.id, year)
+
+
+def get_monthly_trend(months: int, current_user: UserInDB, db: Session):
+    return report_service.get_monthly_trend(db, current_user.id, months)

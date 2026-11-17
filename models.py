@@ -14,6 +14,7 @@ class Category(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
     user_id = Column(Integer, ForeignKey("users.id"))
+    monthly_budget = Column(MONEY, nullable=True)
 
     user = relationship("User", back_populates="categories")
     transactions = relationship("Transaction", back_populates="category")

@@ -1,7 +1,7 @@
 from perfima.routes.category import get_current_user
 from perfima.controllers.transaction_controller import TransactionController
 from perfima.schemas import TransactionResponse, UserInDB, TransactionCreate, TransactionUpdate
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy.orm import Session
 from perfima.database import get_db
 from typing import List
@@ -23,6 +23,14 @@ def read_transactions(
     db: Session = Depends(get_db)
 ):
     return TransactionController.get_user_transactions(current_user, db)
+
+# Declared before /{transaction_id} so "export.csv" isn't parsed as an id
+@router.get("/export.csv", response_class=Response)
+def export_transactions(
+    current_user: UserInDB = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return TransactionController.export_transactions_csv(current_user, db)
 
 @router.get("/{transaction_id}", response_model=TransactionResponse)
 def read_transaction(

@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Depends, Response
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -50,6 +50,18 @@ class TransactionController:
     ) -> List[TransactionResponse]:
         transactions = TransactionService.get_user_transactions(db, current_user.id)
         return [TransactionService.to_response(t) for t in transactions]
+
+    @staticmethod
+    def export_transactions_csv(
+        current_user: UserInDB = Depends(get_current_user),
+        db: Session = Depends(get_db)
+    ) -> Response:
+        transactions = TransactionService.get_user_transactions(db, current_user.id)
+        return Response(
+            content=TransactionService.to_csv(transactions),
+            media_type="text/csv",
+            headers={"Content-Disposition": 'attachment; filename="perfima-transactions.csv"'}
+        )
 
     @staticmethod
     def update_transaction(

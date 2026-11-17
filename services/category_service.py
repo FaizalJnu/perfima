@@ -34,6 +34,9 @@ def update_category(db: Session, category_id: int, category: CategoryUpdate, use
     db_category = get_category_by_id(db, category_id, user_id)
     if db_category:
         update_data = category.dict(exclude_unset=True)
+        # a budget can be cleared with null, a name can't
+        if update_data.get("name") is None:
+            update_data.pop("name", None)
         for key, value in update_data.items():
             setattr(db_category, key, value)
         db.commit()

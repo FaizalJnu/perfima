@@ -1,3 +1,5 @@
+import csv
+import io
 import os
 import pytest
 from datetime import date
@@ -7,6 +9,7 @@ from sqlalchemy.orm import sessionmaker
 from perfima.main import app
 from perfima.database import get_db
 from perfima.models import Base
+from perfima.services.report_service import shift_month
 
 # End to end tests through the HTTP layer, so routes, controllers and services are exercised together
 SQLALCHEMY_DATABASE_URL = os.getenv("TEST_DATABASE_URL", "sqlite:///./test_api.db")
@@ -173,3 +176,85 @@ def test_other_users_cannot_see_transactions(client, headers):
     other = auth_headers(client, "otheruser")
     assert client.get(f"/transactions/{transaction_id}", headers=other).status_code == 404
     assert client.get("/transactions/", headers=other).json() == []
+
+
+def month_key(today, delta):
+    year, month = shift_month(today.year, today.month, delta)
+    return f"{year:04d}-{month:02d}"
+
+
+def test_category_budget_partial_update(client):
+    headers = auth_headers(client, "budgetuser")
+    category_id = client.post("/categories/", json={"name": "Food"}, headers=headers).json()["id"]
+
+    response = client.put(f"/categories/{category_id}", json={"monthly_budget": "300.50"}, headers=headers)
+    assert response.status_code == 200
+    assert response.json()["name"] == "Food"
+    assert response.json()["monthly_budget"] == "300.50"
+
+    response = client.put(f"/categories/{category_id}", json={"monthly_budget": -1}, headers=headers)
+    assert response.status_code == 422
+
+    response = client.put(f"/categories/{category_id}", json={"monthly_budget": None}, headers=headers)
+    assert response.json()["monthly_budget"] is None
+
+
+def test_monthly_trend(client):
+    headers = auth_headers(client, "trenduser")
+    for name in ["Food", "Rent", "Salary"]:
+        client.post("/categories/", json={"name": name}, headers=headers)
+    rent_id = next(c["id"] for c in client.get("/categories/", headers=headers).json() if c["name"] == "Rent")
+    client.put(f"/categories/{rent_id}", json={"monthly_budget": 1000}, headers=headers)
+
+    today = date.today()
+    two_months_ago = date(*shift_month(today.year, today.month, -2), 1)
+    new_transaction(client, headers, amount="0.10", category="Food", date=today.isoformat())
+    new_transaction(client, headers, amount="0.20", category="Food", date=today.isoformat())
+    new_transaction(client, headers, amount=2000, category="Salary", transaction_type="credit", date=today.isoformat())
+    new_transaction(client, headers, amount=40, category="Food", date=two_months_ago.isoformat())
+    # outside the three month window
+    new_transaction(client, headers, amount=99, category="Food", date=date(*shift_month(today.year, today.month, -3), 1).isoformat())
+
+    response = client.get("/reports/trend?months=3", headers=headers)
+    assert response.status_code == 200
+    trend = response.json()
+    assert [m["month"] for m in trend] == [month_key(today, -2), month_key(today, -1), month_key(today, 0)]
+
+    oldest, empty, current = trend
+    assert oldest["expenses"] == "40.00"
+    assert empty["income"] == "0.00" and empty["expenses"] == "0.00"
+    assert empty["categories"] == [{"name": "Rent", "spent": "0.00", "budget": "1000.00"}]
+    assert current["income"] == "2000.00"
+    assert current["expenses"] == "0.30"
+    assert current["categories"] == [
+        {"name": "Food", "spent": "0.30", "budget": None},
+        {"name": "Rent", "spent": "0.00", "budget": "1000.00"},
+    ]
+
+    assert len(client.get("/reports/trend", headers=headers).json()) == 12
+    assert client.get("/reports/trend?months=0", headers=headers).status_code == 422
+
+
+def test_export_csv(client):
+    headers = auth_headers(client, "csvuser")
+    client.post("/categories/", json={"name": "Food"}, headers=headers)
+    new_transaction(client, headers, amount="12.30", description="Coffee, beans", date="2024-02-01")
+    new_transaction(client, headers, amount=5, description="Tea", date="2024-03-01")
+
+    response = client.get("/transactions/export.csv", headers=headers)
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/csv")
+    assert "attachment" in response.headers["content-disposition"]
+
+    rows = list(csv.reader(io.StringIO(response.text)))
+    assert rows == [
+        ["date", "description", "category", "type", "amount"],
+        ["2024-03-01", "Tea", "Food", "debit", "5.00"],
+        ["2024-02-01", "Coffee, beans", "Food", "debit", "12.30"],
+    ]
+
+    assert client.get("/transactions/export.csv").status_code == 401
+
+
+def test_local_routes_absent_in_server_mode(client):
+    assert client.post("/local/session").status_code == 404

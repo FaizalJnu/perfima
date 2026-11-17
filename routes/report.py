@@ -1,9 +1,9 @@
-from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi import APIRouter, Depends, Query, status, HTTPException
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from perfima.database import get_db
 from perfima.controllers import user_controller, report_controller, user_controller
-from perfima.schemas import UserInDB
+from perfima.schemas import UserInDB, MonthlyTrend
 from typing import List
 
 router = APIRouter(prefix="/reports")
@@ -20,6 +20,15 @@ def get_current_user(
             detail="Invalid or expired token",
         )
     return user
+
+@router.get("/trend", response_model=List[MonthlyTrend])
+def get_monthly_trend(
+        months: int = Query(12, ge=1, le=120),
+        current_user: UserInDB = Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    return report_controller.get_monthly_trend(months, current_user, db)
+
 
 @router.get("/monthly/{year}/{month}", response_model=dict)
 def get_monthly_report(
